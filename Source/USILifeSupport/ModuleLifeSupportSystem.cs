@@ -247,27 +247,56 @@ namespace LifeSupport
                             // Update life support stats
                             if (_isStatusRefreshRequired)
                             {
-                                trackedKerbal.TimeEnteredVessel = now;
                                 LifeSupportManager.Instance.TrackKerbal(trackedKerbal);
                             }
 
                             // Update Hab effects
                             if (!offKerbin || isScout || isHomeWorld || isPermaHab)
                             {
-                                trackedKerbal.TimeEnteredVessel = now;
                                 trackedKerbal.LastAtHome = now;
-                                trackedKerbal.MaxOffKerbinTime = habTime + trackedKerbal.LastAtHome;
                             }
                             else
                             {
                                 if (vessel.id.ToString() != trackedKerbal.CurrentVesselId)
                                 {
-                                    if (vessel.id.ToString() != trackedKerbal.PreviousVesselId)
-                                        trackedKerbal.TimeEnteredVessel = now;
-
                                     trackedKerbal.PreviousVesselId = trackedKerbal.CurrentVesselId;
                                     trackedKerbal.CurrentVesselId = vessel.id.ToString();
                                     LifeSupportManager.Instance.TrackKerbal(trackedKerbal);
+                                }
+
+                                // Handle cabin time consumption or regeneration...
+
+                                var timeSinceUpdate = now - trackedKerbal.LastUpdate;
+                                var timePermittedWithinHab = Math.Max(0, VesselStatus.CachedHabTime - (now - trackedKerbal.LastAtHome));
+
+                                // First regenerate based on the amount of hab time we had left.
+                                if (timePermittedWithinHab > 0)
+                                {
+                                    // Count just the remaining hab time if we don't have enough to span the full update
+                                    var habTimeCountingTowardsRegen = Math.Min(timeSinceUpdate, timePermittedWithinHab);
+                                    // Regenerate
+                                    trackedKerbal.RemainingCabinTime += (habTimeCountingTowardsRegen); //TODO: multiply by scaling setting?
+                                    // Now cap it before trying to remove any
+                                    if (trackedKerbal.RemainingCabinTime > LifeSupportScenario.Instance.settings.GetSettings().BaseHabTime
+                                        * LifeSupportUtilities.SecondsPerMonth())
+                                    {
+                                        trackedKerbal.RemainingCabinTime = LifeSupportScenario.Instance.settings.GetSettings().BaseHabTime
+                                        * LifeSupportUtilities.SecondsPerMonth();
+                                    }
+                                }
+
+                                // If we ran out of hab time, any remaining time in the update consumes cabin time.
+                                if (timePermittedWithinHab < timeSinceUpdate)
+                                {
+                                    // Consume the remaining amount in cabin time, scaling by seat fraction filled.
+                                    // TODO: multiplier-based modifier?
+                                    trackedKerbal.RemainingCabinTime -= (timeSinceUpdate - timePermittedWithinHab)
+                                        * ((double)VesselStatus.NumCrew / (double)VesselStatus.CrewCap);
+                                    // Now cap it so we don't have cabin time going crazy negative when loading a vessel after a while
+                                    if (trackedKerbal.RemainingCabinTime < -2)
+                                    {
+                                        trackedKerbal.RemainingCabinTime = -2;
+                                    }
                                 }
 
                                 isGrouchyHab = CheckHabSideEffects(trackedKerbal);
@@ -377,6 +406,12 @@ namespace LifeSupport
             var kerbal = evaKerbal.GetVesselCrew()[0];
             //Check their status.
             var kerbalStatus = LifeSupportManager.Instance.FetchKerbal(kerbal);
+
+            //Update cabin time while EVA - this won't cause any effects until they board something, which is fine for now
+            var now = Planetarium.GetUniversalTime();
+            kerbalStatus.RemainingCabinTime -= now - kerbalStatus.LastUpdate;
+            kerbalStatus.LastUpdate = now;
+
             if (evaKerbal.missionTime > LifeSupportScenario.Instance.settings.GetSettings().EVATime)
             {
                 var effect = LifeSupportManager.GetEVAExcessEffect(kerbalStatus.KerbalName);
@@ -707,17 +742,9 @@ namespace LifeSupport
 
         private bool CheckHabSideEffects(LifeSupportStatus trackedKerbal)
         {
-            var now = Planetarium.GetUniversalTime();
-            var habTime = LifeSupportManager.GetTotalHabTime(VesselStatus, vessel);
-
-            if (trackedKerbal.LastAtHome < 1)
-                trackedKerbal.LastAtHome = now;
-            if (habTime + trackedKerbal.LastAtHome > trackedKerbal.MaxOffKerbinTime)
-                trackedKerbal.MaxOffKerbinTime = habTime + trackedKerbal.LastAtHome;
-
             LifeSupportManager.Instance.TrackKerbal(trackedKerbal);
 
-            return (now > trackedKerbal.MaxOffKerbinTime || (now - trackedKerbal.TimeEnteredVessel) > habTime);
+            return (trackedKerbal.RemainingCabinTime < 0);
         }
 
         private bool CheckSupplySideEffects(LifeSupportStatus trackedKerbal)
@@ -788,7 +815,7 @@ namespace LifeSupport
                 case 0: // No effect
                     return; // No need to print
                 case 1: //Grouchy
-                    msg = string.Format("{0} refuses to work {1}", crewMember.name, reason);
+                    msg = string.Format("{0} refuses to work due to {1}", crewMember.name, reason);
                     trackedKerbal.OldTrait = crewMember.experienceTrait.Config.Name;
                     crewMember.type = ProtoCrewMember.KerbalType.Tourist;
                     KerbalRoster.SetExperienceTrait(crewMember, "Tourist");

@@ -197,10 +197,9 @@ namespace LifeSupport
                     rNode.AddValue("LastAtHome", r.LastAtHome);
                     rNode.AddValue("LastSOIChange", r.LastSOIChange);
                     rNode.AddValue("LastPlanet", r.LastPlanet);
-                    rNode.AddValue("MaxOffKerbinTime", r.MaxOffKerbinTime);
                     rNode.AddValue("CurrentVesselId", r.CurrentVesselId);
                     rNode.AddValue("PreviousVesselId", r.PreviousVesselId);
-                    rNode.AddValue("TimeEnteredVessel", r.TimeEnteredVessel);
+                    rNode.AddValue("RemainingCabinTime", r.RemainingCabinTime);
                     rNode.AddValue("IsGrouchy", r.IsGrouchy);
                     rNode.AddValue("OldTrait", r.OldTrait);
                     rNode.AddValue("LastUpdate", r.LastUpdate);
@@ -429,10 +428,9 @@ namespace LifeSupport
             kerbInfo.LastSOIChange = status.LastSOIChange;
             kerbInfo.HomeBodyId = status.HomeBodyId;
             kerbInfo.LastPlanet = status.LastPlanet;
-            kerbInfo.MaxOffKerbinTime = status.MaxOffKerbinTime;
-            kerbInfo.TimeEnteredVessel = status.TimeEnteredVessel;
             kerbInfo.CurrentVesselId = status.CurrentVesselId;
             kerbInfo.PreviousVesselId = status.PreviousVesselId;
+            kerbInfo.RemainingCabinTime = status.RemainingCabinTime;
             kerbInfo.IsGrouchy = status.IsGrouchy;
             kerbInfo.OldTrait = status.OldTrait;
             kerbInfo.LastUpdate = status.LastUpdate;
