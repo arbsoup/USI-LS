@@ -248,7 +248,6 @@ namespace LifeSupport
                             if (_isStatusRefreshRequired)
                             {
                                 trackedKerbal.TimeEnteredVessel = now;
-                                _isStatusRefreshRequired = false;
                                 LifeSupportManager.Instance.TrackKerbal(trackedKerbal);
                             }
 
@@ -331,6 +330,10 @@ namespace LifeSupport
                             }
 
                             LifeSupportManager.Instance.TrackKerbal(trackedKerbal);
+                        }
+                        if (_isStatusRefreshRequired)
+                        {
+                            _isStatusRefreshRequired = false;
                         }
                     }
                     #endregion - Crew
