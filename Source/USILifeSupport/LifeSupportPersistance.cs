@@ -88,6 +88,7 @@ namespace LifeSupport
                 ScoutHabTime = 9180000,
                 PermaHabTime = 459000000,
                 HabRange = 2000,
+                RecoverySpeed = 1f,
                 VetNames = ""
             };
 
@@ -125,6 +126,7 @@ namespace LifeSupport
                 finalSettings.EVAEffectVets = Math.Max(settings.EVAEffectVets, finalSettings.EVAEffectVets);
                 finalSettings.VetNames += settings.VetNames + ",";
                 finalSettings.HabRange = Math.Min(settings.HabRange, finalSettings.HabRange);
+                finalSettings.RecoverySpeed = Math.Min(settings.RecoverySpeed, finalSettings.RecoverySpeed);
                 if (settings.EnableRecyclers)
                     finalSettings.EnableRecyclers = true;
             }
@@ -257,6 +259,7 @@ namespace LifeSupport
                 sNode.AddValue("ReplacementPartAmount", _Settings.ReplacementPartAmount);
                 sNode.AddValue("EnableRecyclers", _Settings.EnableRecyclers);
                 sNode.AddValue("HabRange", _Settings.HabRange);
+                sNode.AddValue("RecoverySpeed", _Settings.RecoverySpeed);
                 sNode.AddValue("VetNames", _Settings.VetNames);
                 SettingsNode.AddNode(sNode);
             }
@@ -399,6 +402,7 @@ namespace LifeSupport
             _Settings.ReplacementPartAmount = config.ReplacementPartAmount;
             _Settings.EnableRecyclers = config.EnableRecyclers;
             _Settings.HabRange = config.HabRange;
+            _Settings.RecoverySpeed = config.RecoverySpeed;
             _Settings.VetNames = config.VetNames;
         }
 

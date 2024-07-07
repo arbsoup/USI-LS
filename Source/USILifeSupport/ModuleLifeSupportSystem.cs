@@ -275,7 +275,8 @@ namespace LifeSupport
                                     // Count just the remaining hab time if we don't have enough to span the full update
                                     var habTimeCountingTowardsRegen = Math.Min(timeSinceUpdate, timePermittedWithinHab);
                                     // Regenerate
-                                    trackedKerbal.RemainingCabinTime += (habTimeCountingTowardsRegen); //TODO: multiply by scaling setting?
+                                    trackedKerbal.RemainingCabinTime += (habTimeCountingTowardsRegen) * 
+                                        LifeSupportScenario.Instance.settings.GetSettings().RecoverySpeed;
                                     // Now cap it before trying to remove any
                                     if (trackedKerbal.RemainingCabinTime > LifeSupportScenario.Instance.settings.GetSettings().BaseHabTime
                                         * LifeSupportUtilities.SecondsPerMonth())
