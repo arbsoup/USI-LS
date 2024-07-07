@@ -292,7 +292,8 @@ namespace LifeSupport
                                     // Consume the remaining amount in cabin time, scaling by seat fraction filled.
                                     // TODO: multiplier-based modifier?
                                     trackedKerbal.RemainingCabinTime -= (timeSinceUpdate - timePermittedWithinHab)
-                                        * ((double)VesselStatus.NumCrew / (double)VesselStatus.CrewCap);
+                                        * ((double)VesselStatus.NumCrew / (double)VesselStatus.CrewCap)
+                                        * (1.0 / (1 + VesselStatus.VesselHabMultiplier));
                                     // Now cap it so we don't have cabin time going crazy negative when loading a vessel after a while
                                     if (trackedKerbal.RemainingCabinTime < -2)
                                     {

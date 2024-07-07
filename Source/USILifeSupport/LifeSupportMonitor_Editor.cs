@@ -252,12 +252,14 @@ namespace LifeSupport
                     cabin_curCrew = LifeSupportUtilities.DurationDisplay(
                         LifeSupportScenario.Instance.settings.GetSettings().BaseHabTime *
                         LifeSupportUtilities.SecondsPerMonth() *
-                        ((double)maxCrew / (double)Math.Max(1, curCrew))
+                        ((double)maxCrew / (double)Math.Max(1, curCrew)) *
+                        habMult
                     );
                     cabin_maxCrew = LifeSupportUtilities.DurationDisplay(
                         LifeSupportScenario.Instance.settings.GetSettings().BaseHabTime *
                         LifeSupportUtilities.SecondsPerMonth() *
-                        ((double)maxCrew / (double)Math.Max(1, maxCrew))
+                        ((double)maxCrew / (double)Math.Max(1, maxCrew)) *
+                        habMult
                     );
 
                     supplyExt_curCrew = LifeSupportUtilities.DurationDisplay(

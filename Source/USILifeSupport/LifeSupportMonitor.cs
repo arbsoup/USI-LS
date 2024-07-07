@@ -192,9 +192,10 @@ namespace LifeSupport
 
             var numCrew = vsl.NumCrew;
             var crewCap = vsl.CrewCap;
+            var vesselHabMultiplier = vsl.VesselHabMultiplier;
             foreach (var c in thisVessel.GetVesselCrew())
             {
-                var crewStat = GetCrewStat(c, thisVessel, suppliesTimeLeft, ecTimeLeft, ecAmount, habTime, numCrew, crewCap);
+                var crewStat = GetCrewStat(c, thisVessel, suppliesTimeLeft, ecTimeLeft, ecAmount, habTime, numCrew, crewCap, vesselHabMultiplier);
                 vstat.crew.Add(crewStat);
             }
             vstat.crew = vstat.crew.OrderBy(crewStat => crewStat.EarliestExpiration).ToList();
@@ -322,7 +323,7 @@ namespace LifeSupport
             return sitString;
         }
 
-        private LifeSupportCrewDisplayStat GetCrewStat(ProtoCrewMember c, Vessel vessel, double vesselSuppliesTimeLeft, double vesselEcTimeLeft, double vesselEcAmount, double vesselHabTime, int numCrew, int crewCap)
+        private LifeSupportCrewDisplayStat GetCrewStat(ProtoCrewMember c, Vessel vessel, double vesselSuppliesTimeLeft, double vesselEcTimeLeft, double vesselEcAmount, double vesselHabTime, int numCrew, int crewCap, double vesselHabMultiplier)
         {
             var cls = LifeSupportManager.Instance.FetchKerbal(c);
             //Guard clause in case we just changed vessels
@@ -346,7 +347,7 @@ namespace LifeSupport
             cStat.ComputeEc(ecTimeLeft, c);
             cStat.ComputeSupply(vesselSuppliesTimeLeft, c);
             cStat.ComputeHab(vesselHabTime, c, cls);
-            cStat.ComputeCabin(c, cls, numCrew, crewCap);
+            cStat.ComputeCabin(c, cls, numCrew, crewCap, vesselHabMultiplier);
 
             LifeSupportManager.Instance.TrackKerbal(cls);
             return cStat;
@@ -455,33 +456,32 @@ namespace LifeSupport
             HabLabel = String.Format("<color=#{0}>{1}</color>", lblHab, crewHabString);
         }
 
-        internal void ComputeCabin(ProtoCrewMember c, LifeSupportStatus cls, int numCrew, int crewCap)
+        internal void ComputeCabin(ProtoCrewMember c, LifeSupportStatus cls, int numCrew, int crewCap, double vesselHabMultiplier)
         {
             var crewCabinString = "indefinite";
             var lblCabin = "6FFF00";
             var useHabPenalties = LifeSupportManager.GetNoHomeEffect(c.name) > 0;
             if (useHabPenalties)
             {
-                var cabinTimeLeft = cls.RemainingCabinTime;
-                UpdateEarliestExpiration(cabinTimeLeft);
+                var adjustedCabinTimeLeft = cls.RemainingCabinTime * ((double)crewCap / (double)numCrew) * (1 + vesselHabMultiplier);
+                UpdateEarliestExpiration(adjustedCabinTimeLeft);
 
                 // Debug.Log(String.Format("{0} has {1} remaining CabinTime", cls.KerbalName, cabinTimeLeft ));
 
-                var isScout = c.HasEffect("ExplorerSkill") && cabinTimeLeft >= LifeSupportScenario.Instance.settings.GetSettings().ScoutHabTime;
-                var isPermaHab = cabinTimeLeft >= LifeSupportScenario.Instance.settings.GetSettings().PermaHabTime;
+                var isScout = c.HasEffect("ExplorerSkill") && adjustedCabinTimeLeft >= LifeSupportScenario.Instance.settings.GetSettings().ScoutHabTime;
+                var isPermaHab = adjustedCabinTimeLeft >= LifeSupportScenario.Instance.settings.GetSettings().PermaHabTime;
 
                 if (isScout || isPermaHab)
                 {
                     crewCabinString = "indefinite";
                 }
-                else if (cabinTimeLeft < 0)
+                else if (adjustedCabinTimeLeft < 0)
                 {
                     lblCabin = "FF5E5E";
                     crewCabinString = "expired";
                 }
                 else
                 {
-                    var adjustedCabinTimeLeft = cabinTimeLeft * ((double)crewCap / (double)numCrew);
 
                     crewCabinString = LifeSupportUtilities.SmartDurationDisplay(adjustedCabinTimeLeft);
                     var secondsPerDay = LifeSupportUtilities.SecondsPerDay();
