@@ -289,8 +289,7 @@ namespace LifeSupport
                                 // If we ran out of hab time, any remaining time in the update consumes cabin time.
                                 if (timePermittedWithinHab < timeSinceUpdate)
                                 {
-                                    // Consume the remaining amount in cabin time, scaling by seat fraction filled.
-                                    // TODO: multiplier-based modifier?
+                                    // Consume the remaining amount in cabin time, scaling by seat fraction filled and multiplier.
                                     trackedKerbal.RemainingCabinTime -= (timeSinceUpdate - timePermittedWithinHab)
                                         * ((double)VesselStatus.NumCrew / (double)VesselStatus.CrewCap)
                                         * (1.0 / (1 + VesselStatus.VesselHabMultiplier));
@@ -412,6 +411,10 @@ namespace LifeSupport
             //Update cabin time while EVA - this won't cause any effects until they board something, which is fine for now
             var now = Planetarium.GetUniversalTime();
             kerbalStatus.RemainingCabinTime -= now - kerbalStatus.LastUpdate;
+            if (kerbalStatus.RemainingCabinTime < -2)
+            {
+                kerbalStatus.RemainingCabinTime = -2;
+            }
             kerbalStatus.LastUpdate = now;
 
             if (evaKerbal.missionTime > LifeSupportScenario.Instance.settings.GetSettings().EVATime)
