@@ -420,7 +420,12 @@ namespace LifeSupport
             if (evaKerbal.missionTime > LifeSupportScenario.Instance.settings.GetSettings().EVATime)
             {
                 var effect = LifeSupportManager.GetEVAExcessEffect(kerbalStatus.KerbalName);
-                ApplyEVAEffect(kerbalStatus, kerbal, evaKerbal, effect);
+                ApplyEVAEffect(kerbalStatus, kerbal, evaKerbal, effect, "excessive EVA time");
+            }
+            else if (kerbalStatus.RemainingCabinTime < 0)
+            {
+                var effect = LifeSupportManager.GetNoHomeEffect(kerbalStatus.KerbalName);
+                ApplyEVAEffect(kerbalStatus, kerbal, evaKerbal, effect, "homesickness");
             }
         }
 
@@ -430,7 +435,7 @@ namespace LifeSupport
                     (evaKerbal.altitude < LifeSupportScenario.Instance.settings.GetSettings().HomeWorldAltitude);
         }
 
-        private void ApplyEVAEffect(LifeSupportStatus trackedKerbal, ProtoCrewMember crewMember, Vessel vessel, int effectId)
+        private void ApplyEVAEffect(LifeSupportStatus trackedKerbal, ProtoCrewMember crewMember, Vessel vessel, int effectId, string reason)
         {
             if (crewMember.type == ProtoCrewMember.KerbalType.Tourist || crewMember.experienceTrait.Config.Name == "Tourist")
                 return;
@@ -452,7 +457,7 @@ namespace LifeSupport
                 case 1: //Grouchy
                     if (crewMember.type != ProtoCrewMember.KerbalType.Tourist)
                     {
-                        screenMessage = string.Format("{0} refuses to work", crewMember.name);
+                        screenMessage = string.Format("{0} refuses to work due to {1}", crewMember.name, reason);
                         trackedKerbal.OldTrait = crewMember.experienceTrait.Config.Name;
                         crewMember.type = ProtoCrewMember.KerbalType.Tourist;
                         KerbalRoster.SetExperienceTrait(crewMember, "Tourist");
@@ -462,7 +467,7 @@ namespace LifeSupport
                     break;
                 case 2:  //Mutinous
                     {
-                        screenMessage = string.Format("{0} has become mutinous", crewMember.name);
+                        screenMessage = string.Format("{0} has become mutinous due to {1}", crewMember.name, reason);
                         trackedKerbal.OldTrait = crewMember.experienceTrait.Config.Name;
                         crewMember.type = ProtoCrewMember.KerbalType.Tourist;
                         KerbalRoster.SetExperienceTrait(crewMember, "Tourist");
@@ -472,19 +477,19 @@ namespace LifeSupport
                     }
                     break;
                 case 3: //Return to KSC
-                    screenMessage = string.Format("{0} gets fed up and wanders back to the KSC", crewMember.name);
+                    screenMessage = string.Format("{0} gets fed up and wanders back to the KSC due to {1}", crewMember.name, reason);
                     LifeSupportManager.Instance.UntrackKerbal(crewMember.name);
                     crewMember.rosterStatus = ProtoCrewMember.RosterStatus.Available;
                     DestroyVessel(vessel);
                     break;
                 case 4: //Despawn
-                    screenMessage = string.Format("{0} has gone missing", crewMember.name);
+                    screenMessage = string.Format("{0} has gone missing due to {1}", crewMember.name, reason);
                     LifeSupportManager.Instance.UntrackKerbal(crewMember.name);
                     crewMember.rosterStatus = ProtoCrewMember.RosterStatus.Missing;
                     DestroyVessel(vessel);
                     break;
                 case 5: //Kill
-                    screenMessage = string.Format("{0} has died", crewMember.name);
+                    screenMessage = string.Format("{0} has died due to {1}", crewMember.name, reason);
                     LifeSupportManager.Instance.UntrackKerbal(crewMember.name);
                     crewMember.rosterStatus = ProtoCrewMember.RosterStatus.Dead;
                     DestroyVessel(vessel);

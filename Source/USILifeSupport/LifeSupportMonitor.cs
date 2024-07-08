@@ -109,16 +109,37 @@ namespace LifeSupport
             vstat.LastUpdate = kerbal.missionTime;
             var sitString = "(EVA)";
 
+            var evaKerbal = kerbal.GetVesselCrew()[0];
+            var kerbalStatus = LifeSupportManager.Instance.FetchKerbal(evaKerbal);
+            var cabinTime = kerbalStatus.RemainingCabinTime;
+            var cabinTimeString = LifeSupportUtilities.SmartDurationDisplay(Math.Max(0, cabinTime));
+
             var remEVATime = LifeSupportScenario.Instance.settings.GetSettings().EVATime - kerbal.missionTime;
             var timeString = LifeSupportUtilities.SmartDurationDisplay(Math.Max(0, remEVATime));
+
+            var secondsPerDay = LifeSupportUtilities.SecondsPerDay();
+            
+
+            var lblCabin = "6FFF00";
+            if (cabinTime < secondsPerDay * 3)
+            {
+                lblCabin = "FFE100";
+            }
+            if (cabinTime < secondsPerDay * 1)
+            {
+                lblCabin = "FFAE00";
+            }
 
             if (remEVATime > 0)
             {
                 vstat.SummaryLabel = String.Format(
-                    "<color=#3DB1FF>{0}/{1} - </color><color=#9EE4FF>{2}</color><color=#3DB1FF> time remaining</color>"
+                    "<color=#3DB1FF>{0}/{1} - </color><color=#9EE4FF>{2}</color><color=#3DB1FF> time remaining   -   </color>" +
+                    "<color=#{3}>{4}</color><color=#3DB1FF> cabin time</color>"
                     , kerbal.mainBody.bodyName
                     , sitString
-                    , timeString);
+                    , timeString
+                    , lblCabin
+                    , cabinTimeString);
             }
             else
             {
@@ -485,11 +506,11 @@ namespace LifeSupport
 
                     crewCabinString = LifeSupportUtilities.SmartDurationDisplay(adjustedCabinTimeLeft);
                     var secondsPerDay = LifeSupportUtilities.SecondsPerDay();
-                    if (adjustedCabinTimeLeft < secondsPerDay * 30)
+                    if (adjustedCabinTimeLeft < secondsPerDay * 3)
                     {
                         lblCabin = "FFE100";
                     }
-                    if (adjustedCabinTimeLeft < secondsPerDay * 15)
+                    if (adjustedCabinTimeLeft < secondsPerDay * 1)
                     {
                         lblCabin = "FFAE00";
                     }
