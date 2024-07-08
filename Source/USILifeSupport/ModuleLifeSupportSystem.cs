@@ -473,26 +473,25 @@ namespace LifeSupport
                         KerbalRoster.SetExperienceTrait(crewMember, "Tourist");
                         trackedKerbal.IsGrouchy = true;
                         LifeSupportManager.Instance.TrackKerbal(trackedKerbal);
-                        DestroyRandomPart(vessel);
                     }
                     break;
                 case 3: //Return to KSC
                     screenMessage = string.Format("{0} gets fed up and wanders back to the KSC due to {1}", crewMember.name, reason);
                     LifeSupportManager.Instance.UntrackKerbal(crewMember.name);
                     crewMember.rosterStatus = ProtoCrewMember.RosterStatus.Available;
-                    DestroyVessel(vessel);
+                    vessel.Die();
                     break;
                 case 4: //Despawn
                     screenMessage = string.Format("{0} has gone missing due to {1}", crewMember.name, reason);
                     LifeSupportManager.Instance.UntrackKerbal(crewMember.name);
                     crewMember.rosterStatus = ProtoCrewMember.RosterStatus.Missing;
-                    DestroyVessel(vessel);
+                    vessel.Die();
                     break;
                 case 5: //Kill
                     screenMessage = string.Format("{0} has died due to {1}", crewMember.name, reason);
                     LifeSupportManager.Instance.UntrackKerbal(crewMember.name);
                     crewMember.rosterStatus = ProtoCrewMember.RosterStatus.Dead;
-                    DestroyVessel(vessel);
+                    vessel.Die();
                     break;
             }
 
