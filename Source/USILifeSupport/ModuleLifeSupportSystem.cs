@@ -251,6 +251,13 @@ namespace LifeSupport
                             }
 
                             // Update Hab effects
+
+                            // I guess if you've colonized a planet, Kerbals starting there should get cabin time refills?
+                            if (!offKerbin || isHomeWorld)
+                            {
+                                trackedKerbal.RemainingCabinTime = LifeSupportScenario.Instance.settings.GetSettings().BaseHabTime
+                                    * LifeSupportUtilities.SecondsPerMonth();
+                            }
                             if (!offKerbin || isScout || isHomeWorld || isPermaHab)
                             {
                                 trackedKerbal.LastAtHome = now;
