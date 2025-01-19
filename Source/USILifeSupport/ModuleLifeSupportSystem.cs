@@ -274,15 +274,14 @@ namespace LifeSupport
                                 // Handle cabin time consumption or regeneration...
 
                                 var timeSinceUpdate = now - trackedKerbal.LastUpdate;
-                                var timePermittedWithinHab = Math.Max(0, VesselStatus.CachedHabTime - (now - trackedKerbal.LastAtHome));
+                                var timeSpentUnderHab = Math.Min(timeSinceUpdate,
+                                    Math.Max(0, habTime - (trackedKerbal.LastUpdate - trackedKerbal.LastAtHome)));
 
                                 // First regenerate based on the amount of hab time we had left.
-                                if (timePermittedWithinHab > 0)
+                                if (timeSpentUnderHab > 0)
                                 {
-                                    // Count just the remaining hab time if we don't have enough to span the full update
-                                    var habTimeCountingTowardsRegen = Math.Min(timeSinceUpdate, timePermittedWithinHab);
                                     // Regenerate
-                                    trackedKerbal.RemainingCabinTime += (habTimeCountingTowardsRegen) * 
+                                    trackedKerbal.RemainingCabinTime += (timeSpentUnderHab) * 
                                         LifeSupportScenario.Instance.settings.GetSettings().RecoverySpeed;
                                     // Now cap it before trying to remove any
                                     if (trackedKerbal.RemainingCabinTime > LifeSupportScenario.Instance.settings.GetSettings().BaseHabTime
@@ -294,10 +293,10 @@ namespace LifeSupport
                                 }
 
                                 // If we ran out of hab time, any remaining time in the update consumes cabin time.
-                                if (timePermittedWithinHab < timeSinceUpdate)
+                                if (timeSpentUnderHab < timeSinceUpdate)
                                 {
                                     // Consume the remaining amount in cabin time, scaling by seat fraction filled and multiplier.
-                                    trackedKerbal.RemainingCabinTime -= (timeSinceUpdate - timePermittedWithinHab)
+                                    trackedKerbal.RemainingCabinTime -= (timeSinceUpdate - timeSpentUnderHab)
                                         * ((double)VesselStatus.NumCrew / (double)VesselStatus.CrewCap)
                                         * (1.0 / (1 + VesselStatus.VesselHabMultiplier));
                                     // Now cap it so we don't have cabin time going crazy negative when loading a vessel after a while
